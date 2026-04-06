@@ -6,6 +6,10 @@ import { GlassCard }    from '../../components/ui/Atoms'
 import { Badge }        from '../../components/ui/Atoms'
 import {Logo}           from '../../components/ui/Logo'
 import { Field }        from '../../components/ui/Field'
+import { useAuth } from '../../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
+import { useToast } from '../../components/ui/Toast'
+
 /* ── Password strength checker ── */
 function PasswordStrength({ password }) {
   const checks = [
@@ -16,6 +20,10 @@ function PasswordStrength({ password }) {
   const score  = checks.filter(c => c.pass).length
   const colors = ['#f43f5e', '#f59e0b', '#10b981']
   const labels = ['Weak', 'Fair', 'Strong']
+  const { register } = useAuth()
+const navigate     = useNavigate()
+const toast        = useToast()
+
   if (!password) return null
   return (
     <div style={{ marginTop: 6 }}>
@@ -108,6 +116,9 @@ export default function SignupPage({ onNavigateLogin }) {
   const [errors,   setErrors]   = useState({})
   const [loading,  setLoading]  = useState(false)
   const [mounted,  setMounted]  = useState(false)
+    const { register } = useAuth()
+const navigate     = useNavigate()
+const toast        = useToast()
 
   useEffect(() => { setTimeout(() => setMounted(true), 60) }, [])
 
@@ -128,17 +139,28 @@ export default function SignupPage({ onNavigateLogin }) {
     setErrors({}); setStep(1)
   }
 
-  const handleSubmit = async (ev) => {
-    ev.preventDefault()
-    const errs = {}
-    if (!role)  errs.role  = 'Please pick a track'
-    if (!agree) errs.agree = 'You must accept the terms'
-    if (Object.keys(errs).length) { setErrors(errs); return }
-    setErrors({}); setLoading(true)
-    await new Promise(r => setTimeout(r, 1800))
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  const errs = {}
+  if (!role)  errs.role  = 'Please pick a track'
+  if (!agree) errs.agree = 'You must accept the terms'
+  if (Object.keys(errs).length) { setErrors(errs); return }
+  setErrors({})
+  setLoading(true)
+  try {
+    const user = await register(name, email, password, role, college, goal)
+    toast('Account created! Welcome to PrepVerse 🚀', 'success')
+    // New users go to onboarding, existing go to dashboard
+    navigate(user.onboardingDone ? '/dashboard' : '/onboarding', { replace: true })
+  } catch (err) {
+    const msg = err.response?.data?.message ?? 'Signup failed. Please try again.'
+    toast(msg, 'error')
+    setErrors({ email: msg })
+    setStep(0)  // go back to step 1 so user can fix email
+  } finally {
     setLoading(false)
-    alert('Account created!')
   }
+}
 
   return (
     <div style={{ fontFamily: 'Geist, sans-serif', minHeight: '100vh', background: '#080909', color: '#f8fafc', display: 'flex', position: 'relative', overflow: 'hidden' }}>
