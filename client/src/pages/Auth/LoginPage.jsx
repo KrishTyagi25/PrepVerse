@@ -56,9 +56,8 @@ export default function LoginPage({ onNavigateSignup }) {
     setLoading(true);
     try {
       await login(email, password);
-      const from = location.state?.from?.pathname ?? "/dashboard";
       toast("Welcome back! 👋", "success");
-      navigate(from, { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       const msg =
         err.response?.data?.message ?? "Login failed. Check your credentials.";
