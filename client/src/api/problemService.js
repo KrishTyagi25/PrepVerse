@@ -1,6 +1,6 @@
 import api from './axios'
 
-const problemService = {
+export const problemService = {
   getProblems: (filters) =>
     api.get('/problems', { params: filters }),
 
@@ -23,4 +23,3 @@ const problemService = {
     api.get('/problems/stats'),
 }
 
-export default problemService

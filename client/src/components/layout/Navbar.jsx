@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { GlobalSearchBar } from "../ui/GlobalSearchBar";
-import { notificationService } from "../../api/services/notificationService";
+import { notificationService } from "../../api/notificationService";
 import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 const links = [
   { label: "Practice", href: "/practice" },
@@ -39,11 +38,10 @@ export function Navbar() {
       className={`
       fixed top-0 left-0 right-0 z-50
       transition-all duration-400
-      ${
-        scrolled
+      ${scrolled
           ? "py-3 bg-bg/85 backdrop-blur-xl border-b border-white/[.06]"
           : "py-5 bg-transparent"
-      }
+        }
     `}
     >
       <div className="max-w-[1280px] mx-auto px-6 flex items-center justify-between">
@@ -208,7 +206,7 @@ function NotifBell() {
     notificationService
       .getNotifications({ limit: 1 })
       .then(({ data }) => setUnread(data.data.unreadCount))
-      .catch(() => {});
+      .catch(() => { });
   }, [user]);
 
   return (

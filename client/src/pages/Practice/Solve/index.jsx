@@ -10,8 +10,7 @@ import { TestCasePanel } from "./TestCasePanel";
 import { DiffBadge } from "../../../components/ui/Atoms";
 import { Button } from "../../../components/ui/Button";
 import { Tabs } from "../../../components/ui/Tabs";
-import { problemService } from "../../../api/services/problemService";
-import { useToast } from "../../../components/ui/Toast";
+import { problemService } from "../../../api/problemService";
 import { SkeletonCard } from "../../../components/ui/Skeleton";
 
 const PROBLEMS = {

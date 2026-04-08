@@ -2,7 +2,7 @@ import api from './axios'
 
 // Messages routes are commented out in backend
 // Wire this up once messageController is ready
-const messageService = {
+export const messageService = {
   getConversations: () =>
     api.get('/messages/conversations'),
 
@@ -16,4 +16,3 @@ const messageService = {
     api.post(`/messages/${conversationId}`, { text }),
 }
 
-export default messageService

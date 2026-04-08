@@ -1,6 +1,6 @@
 import api from './axios'
 
-const userService = {
+export const userService = {
   getProfile: (id) =>
     api.get(`/users/profile/${id}`),
 
@@ -28,4 +28,3 @@ const userService = {
     api.post('/users/onboarding', data),
 }
 
-export default userService

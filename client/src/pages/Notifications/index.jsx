@@ -6,8 +6,8 @@ import { GlassCard } from '../../components/ui/Atoms'
 import { Badge } from '../../components/ui/Atoms'
 import { Tabs } from '../../components/ui/Tabs'
 import { NotifItem } from './NotifItem'
-import { notificationService } from '../../api/services/notificationService'
-import { SkeletonRow }         from '../../components/ui/Skeleton'
+import { notificationService } from '../../api/notificationService'
+import { SkeletonRow } from '../../components/ui/Skeleton'
 
 const TABS = [
   { id: 'all', label: 'All' },
@@ -26,41 +26,41 @@ export default function NotificationsPage() {
   useCanvasBg('notif-canvas')
   useCursor()
 
-  const [notifs,  setNotifs]  = useState([])
-const [loading, setLoading] = useState(true)
-const [unread,  setUnread]  = useState(0)
+  const [notifs, setNotifs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [unread, setUnread] = useState(0)
 
-useEffect(() => {
-  const fetch = async () => {
-    try {
-      const { data } = await notificationService.getNotifications()
-      setNotifs(data.data.notifications)
-      setUnread(data.data.unreadCount)
-    } catch {
-      toast('Failed to load notifications', 'error')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const { data } = await notificationService.getNotifications()
+        setNotifs(data.data.notifications)
+        setUnread(data.data.unreadCount)
+      } catch {
+        toast('Failed to load notifications', 'error')
+      } finally {
+        setLoading(false)
+      }
     }
-  }
-  fetch()
-}, [])
+    fetch()
+  }, [])
 
   const markAllRead = async () => {
-  await notificationService.markAllRead()
-  setNotifs(n => n.map(x => ({ ...x, read: true })))
-  setUnread(0)
-}
+    await notificationService.markAllRead()
+    setNotifs(n => n.map(x => ({ ...x, read: true })))
+    setUnread(0)
+  }
 
-const markRead = async (id) => {
-  await notificationService.markRead(id)
-  setNotifs(n => n.map(x => x._id === id ? { ...x, read: true } : x))
-  setUnread(u => Math.max(0, u - 1))
-}
+  const markRead = async (id) => {
+    await notificationService.markRead(id)
+    setNotifs(n => n.map(x => x._id === id ? { ...x, read: true } : x))
+    setUnread(u => Math.max(0, u - 1))
+  }
 
-const remove = async (id) => {
-  await notificationService.deleteOne(id)
-  setNotifs(n => n.filter(x => x._id !== id))
-}
+  const remove = async (id) => {
+    await notificationService.deleteOne(id)
+    setNotifs(n => n.filter(x => x._id !== id))
+  }
 
 
   return (

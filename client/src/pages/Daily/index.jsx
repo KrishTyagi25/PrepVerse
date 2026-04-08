@@ -8,22 +8,10 @@ import { GlassCard } from '../../components/ui/Atoms'
 import { Badge } from '../../components/ui/Atoms'
 import { DiffBadge } from '../../components/ui/Atoms'
 import { Button } from '../../components/ui/Button'
-import { problemService } from '../../api/services/problemService'
+import { problemService } from '../../api/problemService'
 
 
-const [today,      setToday]      = useState(null)
-const [solvedToday,setSolvedToday]= useState(false)
-const [loading,    setLoading]    = useState(true)
-
-useEffect(() => {
-  problemService.getDailyProblem()
-    .then(({ data }) => {
-      setToday(data.data.problem)
-      setSolvedToday(data.data.solvedToday)
-    })
-    .catch(() => toast('Failed to load daily challenge', 'error'))
-    .finally(() => setLoading(false))
-}, [])
+// Hooks moved inside component
 
 const PAST = [
   { title: 'Two Sum', diff: 'Easy', date: 'Yesterday', solved: true, xp: 30 },
@@ -60,6 +48,21 @@ export default function DailyPage() {
 
   const [solved, setSolved] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [today, setToday] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    problemService.getDailyProblem()
+      .then(({ data }) => {
+        setToday(data.data.problem)
+      })
+      .catch(() => toast('Failed to load daily', 'error'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading || !today) return <div style={{ minHeight: '100vh', background: '#080909' }} />
+
+  const TODAY = today;
 
   const handleSolve = () => {
     navigate(`/practice/${TODAY.id}`)

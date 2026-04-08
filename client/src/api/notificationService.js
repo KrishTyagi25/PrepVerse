@@ -1,6 +1,6 @@
 import api from './axios'
 
-const notificationService = {
+export const notificationService = {
   getNotifications: () =>
     api.get('/notifications'),
 
@@ -14,4 +14,3 @@ const notificationService = {
     api.delete(`/notifications/${id}`),
 }
 
-export default notificationService

@@ -1,6 +1,6 @@
 import api from './axios'
 
-const leaderboardService = {
+export const leaderboardService = {
   getGlobal: (params) =>
     api.get('/leaderboard/global', { params }),
 
@@ -14,4 +14,3 @@ const leaderboardService = {
     api.get('/leaderboard/stats'),
 }
 
-export default leaderboardService

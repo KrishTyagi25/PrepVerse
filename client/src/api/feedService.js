@@ -1,6 +1,6 @@
 import api from './axios'
 
-const feedService = {
+export const feedService = {
   getFeed: (page = 1) =>
     api.get('/feed', { params: { page } }),
 
@@ -20,4 +20,3 @@ const feedService = {
     api.delete(`/feed/${id}/comment/${commentId}`),
 }
 
-export default feedService
