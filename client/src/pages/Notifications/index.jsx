@@ -6,6 +6,8 @@ import { GlassCard } from '../../components/ui/Atoms'
 import { Badge } from '../../components/ui/Atoms'
 import { Tabs } from '../../components/ui/Tabs'
 import { NotifItem } from './NotifItem'
+import { notificationService } from '../../api/services/notificationService'
+import { SkeletonRow }         from '../../components/ui/Skeleton'
 
 const TABS = [
   { id: 'all', label: 'All' },
@@ -14,18 +16,9 @@ const TABS = [
   { id: 'interview', label: 'Interview' },
 ]
 
-const INIT_NOTIFS = [
-  { id: 1, type: 'connection', read: false, time: '2m ago', actor: 'Priya Sharma', avatar: 'PS', msg: 'sent you a connection request', action: 'Accept', actionVariant: 'primary' },
-  { id: 2, type: 'like', read: false, time: '15m ago', actor: 'Rahul Verma', avatar: 'RV', msg: 'liked your post about Merge Intervals', action: 'View post', actionVariant: 'ghost' },
-  { id: 3, type: 'interview', read: false, time: '1h ago', actor: 'Arjun Nair', avatar: 'AN', msg: 'confirmed your session for Today 3 PM', action: 'View session', actionVariant: 'primary' },
-  { id: 4, type: 'badge', read: false, time: '2h ago', actor: 'PrepVerse', avatar: 'PV', msg: 'You earned the 🔥 7-Day Streak badge!', action: 'View profile', actionVariant: 'ghost' },
-  { id: 5, type: 'comment', read: true, time: '3h ago', actor: 'Ananya Singh', avatar: 'AS', msg: 'commented on your post', action: 'View', actionVariant: 'ghost' },
-  { id: 6, type: 'solved', read: true, time: '5h ago', actor: 'PrepVerse', avatar: 'PV', msg: 'Daily challenge completed! +50 XP earned', action: 'Next challenge', actionVariant: 'outline' },
-  { id: 7, type: 'connection', read: true, time: '1d ago', actor: 'Karan Mehta', avatar: 'KM', msg: 'accepted your connection request', action: 'Message', actionVariant: 'ghost' },
-  { id: 8, type: 'interview', read: true, time: '1d ago', actor: 'PrepVerse', avatar: 'PV', msg: 'Your interview score report is ready', action: 'View report', actionVariant: 'primary' },
-  { id: 9, type: 'like', read: true, time: '2d ago', actor: 'Sneha Patel', avatar: 'SP', msg: 'liked your post about your Razorpay prep', action: 'View post', actionVariant: 'ghost' },
-  { id: 10, type: 'badge', read: true, time: '2d ago', actor: 'PrepVerse', avatar: 'PV', msg: 'You earned the ⚡ Speed Demon badge!', action: 'View badges', actionVariant: 'ghost' },
-]
+
+
+
 
 const CATEGORY = { connection: 'social', like: 'social', comment: 'social', interview: 'interview', badge: 'practice', solved: 'practice' }
 
@@ -33,16 +26,42 @@ export default function NotificationsPage() {
   useCanvasBg('notif-canvas')
   useCursor()
 
-  const [notifs, setNotifs] = useState(INIT_NOTIFS)
-  const [tab, setTab] = useState('all')
+  const [notifs,  setNotifs]  = useState([])
+const [loading, setLoading] = useState(true)
+const [unread,  setUnread]  = useState(0)
 
-  const unread = notifs.filter(n => !n.read).length
+useEffect(() => {
+  const fetch = async () => {
+    try {
+      const { data } = await notificationService.getNotifications()
+      setNotifs(data.data.notifications)
+      setUnread(data.data.unreadCount)
+    } catch {
+      toast('Failed to load notifications', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+  fetch()
+}, [])
 
-  const markAllRead = () => setNotifs(n => n.map(x => ({ ...x, read: true })))
-  const markRead = (id) => setNotifs(n => n.map(x => x.id === id ? { ...x, read: true } : x))
-  const remove = (id) => setNotifs(n => n.filter(x => x.id !== id))
+  const markAllRead = async () => {
+  await notificationService.markAllRead()
+  setNotifs(n => n.map(x => ({ ...x, read: true })))
+  setUnread(0)
+}
 
-  const filtered = notifs.filter(n => tab === 'all' || CATEGORY[n.type] === tab)
+const markRead = async (id) => {
+  await notificationService.markRead(id)
+  setNotifs(n => n.map(x => x._id === id ? { ...x, read: true } : x))
+  setUnread(u => Math.max(0, u - 1))
+}
+
+const remove = async (id) => {
+  await notificationService.deleteOne(id)
+  setNotifs(n => n.filter(x => x._id !== id))
+}
+
 
   return (
     <div style={{ minHeight: '100vh', background: '#080909', color: '#f8fafc', fontFamily: 'Geist,sans-serif' }}>

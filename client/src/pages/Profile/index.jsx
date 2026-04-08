@@ -7,10 +7,27 @@ import { StatsGrid }     from './StatsGrid'
 import { BadgeShelf }    from './BadgeShelf'
 import { SolveHeatmap }  from './SolveHeatmap'
 import { ProjectsSection } from './ProfileSection'
+import { useParams }    from 'react-router-dom'
+import { useAuth }      from '../../context/AuthContext'
+import { userService }  from '../../api/services/userService'
 
 export default function ProfilePage() {
   useCanvasBg('profile-canvas')
   useCursor()
+  const { username }    = useParams()
+const { user: me }    = useAuth()
+const [profile, setProfile] = useState(null)
+const [loading, setLoading] = useState(true)
+
+useEffect(() => {
+  // If no username in URL, show logged-in user's profile
+  const id = username ?? me?._id
+  if (!id) return
+  userService.getProfile(id)
+    .then(({ data }) => setProfile(data.data.user))
+    .catch(() => toast('Profile not found', 'error'))
+    .finally(() => setLoading(false))
+}, [username, me?._id])
 
   return (
     <div style={{ minHeight:'100vh', background:'#080909', color:'#f8fafc', fontFamily:'Geist,sans-serif' }}>

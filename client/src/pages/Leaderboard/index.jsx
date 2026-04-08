@@ -5,6 +5,11 @@ import { useCursor }      from '../../hooks/useCursor'
 import { Tabs }           from '../../components/ui/Tabs'
 import { TopThreePodium } from './TopThreePodium'
 import { RankRow }        from './RankRow'
+import { leaderboardService } from '../../api/services/leaderboardService'
+import { SkeletonRow }        from '../../components/ui/Skeleton'
+import { useAuth }          from '../../context/AuthContext'
+import { problemService }   from '../../api/services/problemService'
+import { leaderboardService }from '../../api/services/leaderboardService'
 
 const TABS = [
   { id:'global',  label:'Global',  icon:'🌍' },
@@ -12,21 +17,50 @@ const TABS = [
   { id:'domain',  label:'Domain',  icon:'🎯' },
 ]
 
-const MOCK_USERS = [
-  { rank:1,  name:'Priya Sharma',    college:'IIT Delhi',    score:9840, streak:62, solved:214, avatar:'PS' },
-  { rank:2,  name:'Rahul Verma',     college:'NIT Trichy',   score:9210, streak:45, solved:198, avatar:'RV' },
-  { rank:3,  name:'Ananya Singh',    college:'BITS Pilani',  score:8970, streak:38, solved:187, avatar:'AS' },
-  { rank:4,  name:'Karan Mehta',     college:'IIT Bombay',   score:8540, streak:30, solved:172, avatar:'KM' },
-  { rank:5,  name:'Sneha Patel',     college:'VIT Vellore',  score:8120, streak:27, solved:165, avatar:'SP' },
-  { rank:6,  name:'Aryan Sharma',    college:'DTU',          score:7890, streak:14, solved:152, avatar:'AS' },
-  { rank:7,  name:'Divya Nair',      college:'IIIT Hyderabad',score:7460,streak:22, solved:141, avatar:'DN' },
-  { rank:8,  name:'Rohan Gupta',     college:'IIT Kanpur',   score:7120, streak:18, solved:135, avatar:'RG' },
-]
+const [users,   setUsers]   = useState([])
+const [loading, setLoading] = useState(true)
+const [tab,     setTab]     = useState('global')
 
-export default function LeaderboardPage() {
+const fetchLeaderboard = async (activeTab) => {
+  setLoading(true)
+  try {
+    const { data } = activeTab === 'friends'
+      ? await leaderboardService.getFriends()
+      : await leaderboardService.getGlobal()
+    setUsers(data.data.users)
+  } catch {
+    toast('Failed to load leaderboard', 'error')
+  } finally {
+    setLoading(false)
+  }
+}
+
+useEffect(() => { fetchLeaderboard(tab) }, [tab])
+
+{loading
+  ? Array.from({ length: 8 }).map((_,i) => <SkeletonRow key={i}/>)
+  : users.map(u => <RankRow key={u._id} user={u}/>)
+}
+
+export
+ default function LeaderboardPage() {
   useCanvasBg('lb-canvas')
   useCursor()
   const [tab, setTab] = useState('global')
+  const { user } = useAuth()
+
+const [stats,   setStats]   = useState(null)
+const [myRank,  setMyRank]  = useState(null)
+
+useEffect(() => {
+  Promise.all([
+    problemService.getMyStats(),
+    leaderboardService.getMyRank(),
+  ]).then(([statsRes, rankRes]) => {
+    setStats(statsRes.data.data)
+    setMyRank(rankRes.data.data)
+  }).catch(() => {})
+}, [])
 
   return (
     <div style={{ minHeight:'100vh', background:'#080909', color:'#f8fafc', fontFamily:'Geist,sans-serif' }}>

@@ -8,12 +8,22 @@ import { GlassCard } from '../../components/ui/Atoms'
 import { Badge } from '../../components/ui/Atoms'
 import { DiffBadge } from '../../components/ui/Atoms'
 import { Button } from '../../components/ui/Button'
+import { problemService } from '../../api/services/problemService'
 
-const TODAY = {
-  id: 9, title: 'Coin Change', diff: 'Medium', tag: 'DP', company: 'Google',
-  desc: 'You are given an integer array coins representing coins of various denominations and an integer amount. Return the fewest number of coins needed to make up that amount. Return -1 if it cannot be achieved.',
-  xp: 50, streak_bonus: 10,
-}
+
+const [today,      setToday]      = useState(null)
+const [solvedToday,setSolvedToday]= useState(false)
+const [loading,    setLoading]    = useState(true)
+
+useEffect(() => {
+  problemService.getDailyProblem()
+    .then(({ data }) => {
+      setToday(data.data.problem)
+      setSolvedToday(data.data.solvedToday)
+    })
+    .catch(() => toast('Failed to load daily challenge', 'error'))
+    .finally(() => setLoading(false))
+}, [])
 
 const PAST = [
   { title: 'Two Sum', diff: 'Easy', date: 'Yesterday', solved: true, xp: 30 },

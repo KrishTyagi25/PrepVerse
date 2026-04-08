@@ -6,21 +6,26 @@ import { Tabs }           from '../../components/ui/Tabs'
 import { useCanvasBg }    from '../../hooks/useCanvasBg'
 import { useCursor }      from '../../hooks/useCursor'
 import { Navbar }         from '../../components/layout/Navbar'
+import { userService } from '../../api/services/userService'
 
-const ALL_USERS = [
-  { id:1,  name:'Priya Sharma',    college:'IIT Delhi',      role:'Frontend',  score:94, streak:62, solved:214, skills:['React','TypeScript','CSS'],        mutual:3,  connected:false, pending:false, bio:'Placed @ Razorpay 🎉 | Helping others crack FAANG' },
-  { id:2,  name:'Rahul Verma',     college:'NIT Trichy',     role:'Backend',   score:89, streak:45, solved:198, skills:['Node.js','PostgreSQL','Redis'],     mutual:5,  connected:true,  pending:false, bio:'Backend dev | Open to opportunities | Coffee addict ☕' },
-  { id:3,  name:'Ananya Singh',    college:'BITS Pilani',    role:'Fullstack', score:87, streak:38, solved:187, skills:['MERN','Docker','AWS'],              mutual:2,  connected:false, pending:true,  bio:'Full-stack dev | Building things that matter 🚀' },
-  { id:4,  name:'Karan Mehta',     college:'IIT Bombay',     role:'ML / AI',   score:91, streak:30, solved:172, skills:['PyTorch','NLP','Python'],          mutual:7,  connected:false, pending:false, bio:'ML researcher | NLP enthusiast | IIT Bombay CSE' },
-  { id:5,  name:'Sneha Patel',     college:'VIT Vellore',    role:'Frontend',  score:82, streak:27, solved:165, skills:['Vue','React','GraphQL'],            mutual:1,  connected:false, pending:false, bio:'UI/UX + Frontend | Making the web prettier 🎨' },
-  { id:6,  name:'Divya Nair',      college:'IIIT Hyderabad', role:'Backend',   score:78, streak:22, solved:141, skills:['Java','Spring','MySQL'],            mutual:4,  connected:false, pending:false, bio:'Java dev | Spring Boot | Competitive programmer' },
-  { id:7,  name:'Rohan Gupta',     college:'IIT Kanpur',     role:'ML / AI',   score:86, streak:18, solved:135, skills:['TensorFlow','CV','Python'],        mutual:6,  connected:true,  pending:false, bio:'Computer vision | Kaggle Master | IIT Kanpur' },
-  { id:8,  name:'Tanvi Joshi',     college:'NIT Warangal',   role:'Frontend',  score:79, streak:15, solved:118, skills:['React','Next.js','Figma'],         mutual:2,  connected:false, pending:false, bio:'Frontend dev + designer | Next.js lover 💙' },
-  { id:9,  name:'Aditya Kumar',    college:'BITS Goa',       role:'Fullstack', score:83, streak:33, solved:155, skills:['React','Node.js','GraphQL'],       mutual:8,  connected:false, pending:false, bio:'Full-stack | Open source contributor | BITS Goa' },
-  { id:10, name:'Meera Iyer',      college:'NIT Surathkal',  role:'Backend',   score:80, streak:20, solved:129, skills:['Go','Docker','Kubernetes'],        mutual:3,  connected:false, pending:false, bio:'Go developer | DevOps curious | NIT Surathkal' },
-  { id:11, name:'Arjun Pillai',    college:'IIT Madras',     role:'ML / AI',   score:88, streak:25, solved:148, skills:['PyTorch','Transformers','Python'], mutual:5,  connected:false, pending:false, bio:'LLM research | Transformers | IIT Madras' },
-  { id:12, name:'Riya Desai',      college:'DAIICT',         role:'Frontend',  score:76, streak:12, solved:102, skills:['React','CSS','Figma'],             mutual:1,  connected:false, pending:false, bio:'UI developer | Figma to code | DAIICT 2025' },
-]
+
+const [users,   setUsers]   = useState([])
+const [loading, setLoading] = useState(true)
+
+const fetchUsers = async (params = {}) => {
+  setLoading(true)
+  try {
+    const { data } = await userService.searchUsers(params)
+    setUsers(data.data.users)
+  } catch {
+    toast('Failed to search users', 'error')
+  } finally {
+    setLoading(false)
+  }
+}
+
+useEffect(() => { fetchUsers() }, [])
+
 
 const ROLE_TABS = [
   { id:'All',      label:'All',       icon:'👥' },
@@ -42,12 +47,28 @@ export default function PeopleSearchPage() {
   const [users,   setUsers]   = useState(ALL_USERS)
   const [profile, setProfile] = useState(null)   // user whose mini-profile card is open
 
-  const connect = (id) => {
-    setUsers(u => u.map(x => x.id === id ? { ...x, pending: true } : x))
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    fetchUsers({
+      q:    search || undefined,
+      role: roleTab !== 'All' ? roleTab : undefined,
+    })
+  }, 300)
+  return () => clearTimeout(timer)
+}, [search, roleTab])
+
+ const connect = async (id) => {
+  try {
+    await userService.sendConnectionRequest(id)
+    setUsers(u => u.map(x => x._id === id ? { ...x, pending: true } : x))
     setTimeout(() => {
-      setUsers(u => u.map(x => x.id === id ? { ...x, pending: false, connected: true } : x))
-    }, 1500)
+      setUsers(u => u.map(x => x._id === id ? { ...x, pending: false, connected: true } : x))
+    }, 1000)
+  } catch (err) {
+    toast(err.response?.data?.message ?? 'Failed to connect', 'error')
   }
+}
 
   const disconnect = (id) => {
     setUsers(u => u.map(x => x.id === id ? { ...x, connected: false } : x))

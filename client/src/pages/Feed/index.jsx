@@ -5,14 +5,57 @@ import { useCursor }    from '../../hooks/useCursor'
 import { CreatePost }   from './CreatePost'
 import { PostCard }     from './PostCard'
 import { FeedSidebar }  from './FeedSidebar'
+import { feedService } from '../../api/services/feedService'
+import { SkeletonCard } from '../../components/ui/Skeleton'
 
-const INIT_POSTS = [
-  { id:1,  author:{ name:'Priya Sharma',  college:'IIT Delhi',   avatar:'PS', role:'Frontend' }, time:'2h ago',  type:'badge',    content:"Just earned the '7-Day Streak' badge on PrepVerse! 🔥 Consistency is everything.", badge:'🔥 7-Day Streak',  likes:48, comments:6,  liked:false },
-  { id:2,  author:{ name:'Rahul Verma',   college:'NIT Trichy',  avatar:'RV', role:'Backend'  }, time:'5h ago',  type:'solved',   content:"Finally cracked 'Trapping Rain Water' after 3 attempts. The two-pointer approach clicked after I drew it out. Hard problems just need a different lens. 💡", diff:'Hard', likes:72, comments:11, liked:false },
-  { id:3,  author:{ name:'Ananya Singh',  college:'BITS Pilani', avatar:'AS', role:'Fullstack' }, time:'1d ago',  type:'post',     content:"Got placed at Razorpay! 🎉 100 days of consistent prep on PrepVerse made the difference. To everyone still grinding — it's worth it. DM me if you want to know my strategy.", likes:214, comments:38, liked:true },
-  { id:4,  author:{ name:'Karan Mehta',   college:'IIT Bombay',  avatar:'KM', role:'ML / AI'  }, time:'1d ago',  type:'interview',content:"Just completed a live recruiter session with an SDE from Amazon. Scored 91/100 🤯. The feedback on my system design was incredibly detailed. 10/10 would recommend.", score:91, likes:95, comments:14, liked:false },
-  { id:5,  author:{ name:'Sneha Patel',   college:'VIT Vellore', avatar:'SP', role:'Frontend' }, time:'2d ago',  type:'project',  content:"Shipped my portfolio project — a full-stack task manager with real-time updates! Built with React + Node + Socket.io. Would love feedback from the community 🚀", projectName:'TaskFlow', projectUrl:'https://github.com', likes:63, comments:9, liked:false },
-]
+const [posts,   setPosts]   = useState([])
+const [loading, setLoading] = useState(true)
+const [page,    setPage]    = useState(1)
+const [hasMore, setHasMore] = useState(true)
+
+const fetchFeed = async (pageNum = 1, append = false) => {
+  try {
+    const { data } = await feedService.getFeed({ page: pageNum, limit: 10 })
+    const newPosts = data.data.posts
+    setPosts(prev => append ? [...prev, ...newPosts] : newPosts)
+    setHasMore(pageNum < data.data.pagination.pages)
+  } catch {
+    toast('Failed to load feed', 'error')
+  } finally {
+    setLoading(false)
+  }
+}
+
+useEffect(() => { fetchFeed() }, [])
+
+const addPost = async (newPost) => {
+  try {
+    const { data } = await feedService.createPost(newPost)
+    setPosts(p => [data.data.post, ...p])
+    toast('Post shared!', 'success')
+  } catch {
+    toast('Failed to create post', 'error')
+  }
+}
+
+// Replace toggleLike:
+const toggleLike = async (id) => {
+  try {
+    const { data } = await feedService.toggleLike(id)
+    setPosts(p => p.map(post =>
+      post._id === id
+        ? { ...post, liked: data.data.liked, likedByMe: data.data.liked, likesCount: data.data.likesCount }
+        : post
+    ))
+  } catch {}
+}
+
+// Loading skeleton:
+// In JSX, replace hardcoded posts with:
+{loading
+  ? Array.from({ length: 3 }).map((_,i) => <SkeletonCard key={i} lines={4}/>)
+  : posts.map(p => <PostCard key={p._id} post={p} onLike={() => toggleLike(p._id)}/>)
+}
 
 export default function FeedPage() {
   useCanvasBg('feed-canvas')
