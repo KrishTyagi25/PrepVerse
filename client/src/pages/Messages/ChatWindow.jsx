@@ -8,6 +8,8 @@ export function ChatWindow({ convo }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [typing, setTyping] = useState(false)
+  const bottomRef = useRef(null)
 
   useEffect(() => {
     if (!convo?._id) return

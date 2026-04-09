@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Navbar } from '../../components/layout/Navbar'
 import { useCanvasBg } from '../../hooks/useCanvasBg'
 import { useCursor } from '../../hooks/useCursor'
@@ -10,8 +10,10 @@ import { ProjectsSection } from './ProfileSection'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { userService } from '../../api/userService'
+import { useToast } from '../../components/ui/Toast'
 
 export default function ProfilePage() {
+  const toast = useToast()
   useCanvasBg('profile-canvas')
   useCursor()
   const { username } = useParams()
@@ -29,6 +31,16 @@ export default function ProfilePage() {
       .finally(() => setLoading(false))
   }, [username, me?._id])
 
+  if (loading) return <div style={{ minHeight: '100vh', background: '#080909' }} />
+  if (!profile) return (
+    <div style={{ minHeight: '100vh', background: '#080909', color: '#f8fafc', fontFamily: 'Geist,sans-serif' }}>
+      <Navbar />
+      <main style={{ maxWidth: 900, margin: '150px auto', textAlign: 'center' }}>
+        <h2 style={{ fontFamily: 'Bricolage Grotesque,sans-serif', fontWeight: 700, fontSize: 24 }}>Profile not found</h2>
+      </main>
+    </div>
+  )
+
   return (
     <div style={{ minHeight: '100vh', background: '#080909', color: '#f8fafc', fontFamily: 'Geist,sans-serif' }}>
       <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -43,8 +55,8 @@ export default function ProfilePage() {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <Navbar />
         <main style={{ maxWidth: 900, margin: '0 auto', padding: '100px 24px 60px' }}>
-          <ProfileHeader />
-          <StatsGrid />
+          <ProfileHeader profile={profile} />
+          <StatsGrid profile={profile} />
           <BadgeShelf />
           <ProjectsSection />
           <SolveHeatmap />

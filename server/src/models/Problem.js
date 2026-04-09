@@ -1,40 +1,40 @@
 const mongoose = require('mongoose')
 
 const problemSchema = new mongoose.Schema({
-  title:       { type: String, required: true, trim: true },
-  slug:        { type: String, required: true, unique: true, lowercase: true },
-  difficulty:  { type: String, enum: ['Easy', 'Medium', 'Hard'], required: true },
-  tags:        [{ type: String }],
-  companies:   [{ type: String }],
+  title: { type: String, required: true, trim: true },
+  slug: { type: String, required: true, unique: true, lowercase: true },
+  difficulty: { type: String, enum: ['Easy', 'Medium', 'Hard'], required: true },
+  tags: [{ type: String }],
+  companies: [{ type: String }],
   description: { type: String, required: true },
   examples: [{
-    input:       String,
-    output:      String,
+    input: String,
+    output: String,
     explanation: String,
   }],
   constraints: [{ type: String }],
   starterCode: {
     javascript: { type: String, default: '' },
-    python:     { type: String, default: '' },
-    java:       { type: String, default: '' },
-    cpp:        { type: String, default: '' },
+    python: { type: String, default: '' },
+    java: { type: String, default: '' },
+    cpp: { type: String, default: '' },
   },
   solution: {
-    javascript: { type: String, default: '', select: false },
-    approach:   { type: String, default: '' },
-    timeComplexity:  String,
+    javascript: { type: String, default: '' },
+    approach: { type: String, default: '' },
+    timeComplexity: String,
     spaceComplexity: String,
   },
   testCases: [{
-    input:    { type: String, required: true },
+    input: { type: String, required: true },
     expected: { type: String, required: true },
     isHidden: { type: Boolean, default: false },
   }],
-  xpReward:    { type: Number, default: 30 },
-  isDaily:     { type: Boolean, default: false },
-  dailyDate:   { type: Date,   default: null },
+  xpReward: { type: Number, default: 30 },
+  isDaily: { type: Boolean, default: false },
+  dailyDate: { type: Date, default: null },
   totalSolves: { type: Number, default: 0 },
-  isActive:    { type: Boolean, default: true },
+  isActive: { type: Boolean, default: true },
 }, { timestamps: true })
 
 problemSchema.index({ difficulty: 1 })

@@ -60,9 +60,26 @@ export default function DailyPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading || !today) return <div style={{ minHeight: '100vh', background: '#080909' }} />
+  if (loading) return <div style={{ minHeight: '100vh', background: '#080909' }} />
+  if (!today) return (
+    <div style={{ minHeight: '100vh', background: '#080909', color: '#f8fafc', fontFamily: 'Geist,sans-serif' }}>
+      <Navbar />
+      <main style={{ maxWidth: 1000, margin: '150px auto', textAlign: 'center' }}>
+        <h2 style={{ fontFamily: 'Bricolage Grotesque,sans-serif', fontWeight: 700, fontSize: 24 }}>No Daily Problem Available</h2>
+        <p style={{ color: '#475569', marginTop: 10 }}>Please check back later.</p>
+      </main>
+    </div>
+  )
 
-  const TODAY = today;
+  const TODAY = {
+    id: today._id || today.id,
+    title: today.title,
+    diff: today.difficulty,
+    tag: today.tags?.[0] || 'Algorithm',
+    desc: today.description,
+    xp: today.xpReward || 30,
+    streak_bonus: 10
+  };
 
   const handleSolve = () => {
     navigate(`/practice/${TODAY.id}`)

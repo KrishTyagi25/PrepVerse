@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { GlassCard } from '../../components/ui/Atoms'
 import { Badge } from '../../components/ui/Atoms'
 import { Button } from '../../components/ui/Button'
@@ -57,15 +57,15 @@ export default function PeopleSearchPage() {
   }
 
   const disconnect = (id) => {
-    setUsers(u => u.map(x => x.id === id ? { ...x, connected: false } : x))
+    setUsers(u => u.map(x => (x._id || x.id) === id ? { ...x, connected: false } : x))
   }
 
   const filtered = useMemo(() => {
     let list = users.filter(u => {
       if (roleTab !== 'All' && u.role !== roleTab) return false
       if (search && !u.name.toLowerCase().includes(search.toLowerCase()) &&
-        !u.college.toLowerCase().includes(search.toLowerCase()) &&
-        !u.skills.some(s => s.toLowerCase().includes(search.toLowerCase()))) return false
+        !(u.college || '').toLowerCase().includes(search.toLowerCase()) &&
+        !(u.skills || []).some(s => s.toLowerCase().includes(search.toLowerCase()))) return false
       return true
     })
     if (sort === 'Most mutual') list = [...list].sort((a, b) => b.mutual - a.mutual)
@@ -157,10 +157,10 @@ export default function PeopleSearchPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 14 }}>
                   {filtered.map(u => (
                     <UserCard
-                      key={u.id}
+                      key={u._id || u.id}
                       user={u}
-                      onConnect={() => connect(u.id)}
-                      onDisconnect={() => disconnect(u.id)}
+                      onConnect={() => connect(u._id || u.id)}
+                      onDisconnect={() => disconnect(u._id || u.id)}
                       onViewProfile={() => setProfile(u)}
                     />
                   ))}
@@ -182,7 +182,7 @@ export default function PeopleSearchPage() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {connections.map(u => (
-                      <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div key={u._id || u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <Avatar user={u} size={32} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontFamily: 'Bricolage Grotesque,sans-serif', fontWeight: 600, fontSize: 13, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
@@ -204,7 +204,7 @@ export default function PeopleSearchPage() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {pending.map(u => (
-                      <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div key={u._id || u.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Avatar user={u} size={28} />
                         <div style={{ fontFamily: 'Bricolage Grotesque,sans-serif', fontSize: 12, color: '#94a3b8', flex: 1 }}>{u.name}</div>
                         <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: '#f59e0b' }}>Pending…</span>
@@ -230,7 +230,7 @@ export default function PeopleSearchPage() {
       </div>
 
       {/* Mini profile overlay */}
-      {profile && <ProfileOverlay user={profile} onClose={() => setProfile(null)} onConnect={() => { connect(profile.id); setProfile(null) }} onDisconnect={() => { disconnect(profile.id); setProfile(null) }} />}
+      {profile && <ProfileOverlay user={profile} onClose={() => setProfile(null)} onConnect={() => { connect(profile._id || profile.id); setProfile(null) }} onDisconnect={() => { disconnect(profile._id || profile.id); setProfile(null) }} />}
 
       <div id="cur-dot" /><div id="cur-ring" />
     </div>
@@ -275,7 +275,7 @@ function UserCard({ user: u, onConnect, onDisconnect, onViewProfile }) {
 
       {/* Skills */}
       <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 14 }}>
-        {u.skills.slice(0, 3).map(s => (
+        {(u.skills || []).slice(0, 3).map(s => (
           <span key={s} style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: '#475569', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 4, padding: '2px 7px' }}>{s}</span>
         ))}
       </div>
@@ -340,7 +340,7 @@ function ProfileOverlay({ user: u, onClose, onConnect, onDisconnect }) {
 
           {/* Skills */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
-            {u.skills.map(s => (
+            {(u.skills || []).map(s => (
               <span key={s} style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: '#475569', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 4, padding: '3px 8px' }}>{s}</span>
             ))}
           </div>
