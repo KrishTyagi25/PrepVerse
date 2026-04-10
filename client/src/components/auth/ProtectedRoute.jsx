@@ -3,10 +3,9 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export function ProtectedRoute({ children }) {
-  const { isLoggedIn, loading } = useAuth()
+  const { isLoggedIn, loading, user } = useAuth()
   const location = useLocation()
 
-  // Wait for session check before deciding
   if (loading) {
     return (
       <div style={{ minHeight:'100vh', background:'#080909', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -18,6 +17,11 @@ export function ProtectedRoute({ children }) {
 
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} replace/>
+  }
+
+  // New user — redirect to onboarding (except if already going there)
+  if (user && !user.onboardingDone && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace/>
   }
 
   return children

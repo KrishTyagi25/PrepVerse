@@ -6,20 +6,46 @@ import { useToast }     from '../../components/ui/Toast'
 import { Step1Track }   from './Step1Track'
 import { Step2Profile } from './Step2Profile'
 import { Step3FirstSolve } from './Step3FirstSolve'
+import { userService } from '../../api/services/userService'
+import { useAuth }     from '../../context/AuthContext'
 
 export default function OnboardingPage() {
   useCanvasBg('ob-canvas')
   useCursor()
   const toast    = useToast()
   const navigate = useNavigate()
+  const { updateUser } = useAuth()
 
   const [step, setStep] = useState(0)
   const [data, setData] = useState({ role:'', goal:'', college:'', bio:'' })
 
-  const next  = (updates = {}) => { setData(d => ({ ...d, ...updates })); setStep(s => s + 1) }
-  const finish = () => {
-    toast('🎉 Welcome to PrepVerse! Your journey starts now.', 'success', 4000)
-    navigate('/dashboard')
+  const next  = (updates = {}) => { 
+    setData(d => ({ ...d, ...updates })); 
+    setStep(s => s + 1) 
+  }
+
+  // ✅ MERGED LOGIC (API + context update)
+  const finish = async () => {
+    try {
+      await userService.completeOnboarding({
+        role:    data.role,
+        goal:    data.goal,
+        college: data.college,
+        bio:     data.bio,
+      })
+
+      updateUser({
+        onboardingDone: true,
+        role: data.role,
+        goal: data.goal,
+        college: data.college
+      })
+
+      toast('🎉 Welcome to PrepVerse! Your journey starts now.', 'success', 4000)
+      navigate('/dashboard')
+    } catch (err) {
+      toast(err.response?.data?.message ?? 'Failed to save — try again', 'error')
+    }
   }
 
   const STEPS = ['Choose your track', 'Set up your profile', 'Solve your first problem']
@@ -61,9 +87,13 @@ export default function OnboardingPage() {
           {step === 2 && <Step3FirstSolve onFinish={finish} onBack={() => setStep(1)}/>}
         </div>
 
-        <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:10, color:'#1e293b', marginTop:32 }}>Step {step+1} of {STEPS.length}</div>
+        <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:10, color:'#1e293b', marginTop:32 }}>
+          Step {step+1} of {STEPS.length}
+        </div>
       </div>
-      <div id="cur-dot"/><div id="cur-ring"/>
+
+      <div id="cur-dot"/>
+      <div id="cur-ring"/>
     </div>
   )
 }
