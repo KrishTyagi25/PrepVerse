@@ -1,6 +1,6 @@
 import api from './axios'
 
-const authService = {
+export const authService = {
   register: (name, email, password, role, college, goal) =>
     api.post('/auth/register', { name, email, password, role, college, goal }),
 
@@ -22,5 +22,3 @@ const authService = {
   changePassword: (currentPassword, newPassword) =>
     api.post('/auth/change-password', { currentPassword, newPassword }),
 }
-
-export default authService
