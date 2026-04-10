@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { GlobalSearchBar } from "../ui/GlobalSearchBar";
 import { notificationService } from "../../api/notificationService";
 import { useAuth } from "../../context/AuthContext";
+import { useSocketContext } from '../../context/SocketContext'
+
 
 const links = [
   { label: "Practice", href: "/practice" },
@@ -200,6 +202,8 @@ function NotifBell() {
   const UNREAD = 4;
   const { user } = useAuth();
   const [unread, setUnread] = useState(0);
+  const { on, off } = useSocketContext()
+
 
   useEffect(() => {
     if (!user) return;
@@ -208,6 +212,12 @@ function NotifBell() {
       .then(({ data }) => setUnread(data.data.unreadCount))
       .catch(() => { });
   }, [user]);
+
+  useEffect(() => {
+  const handler = () => setUnread(u => u + 1)
+  on('notification:new', handler)
+  return () => off('notification:new', handler)
+}, [])
 
   return (
     <div style={{ position: "relative" }}>
