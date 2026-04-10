@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { DiffBadge } from '../../components/ui/Atoms'
 
 
-export function ProblemTable({ problems }) {
+export function ProblemTable({ problems, page = 1, limit = 20, onRowClick }) {
     const navigate = useNavigate()
 
   const [hovered, setHovered] = useState(null)
@@ -29,17 +29,18 @@ export function ProblemTable({ problems }) {
       {/* Rows */}
       {problems.map((p, i) => (
         <div
-          key={p.id}
-          onMouseEnter={() => setHovered(p.id)}
+          key={p._id || p.id}
+          onClick={() => onRowClick && onRowClick(p.slug || p._id || p.id)}
+          onMouseEnter={() => setHovered(p._id || p.id)}
           onMouseLeave={() => setHovered(null)}
           style={{
             display:'grid', gridTemplateColumns:'40px 1fr 100px 120px 80px 60px', gap:0,
             padding:'13px 16px', cursor:'pointer', transition:'background .15s',
-            background: hovered === p.id ? 'rgba(255,255,255,.04)' : 'transparent',
+            background: hovered === (p._id || p.id) ? 'rgba(255,255,255,.04)' : 'transparent',
             borderBottom: i < problems.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none',
           }}
         >
-          <span style={{ fontFamily:'JetBrains Mono,monospace', fontSize:12, color:'#1e293b' }}>{p.id}</span>
+          <span style={{ fontFamily:'JetBrains Mono,monospace', fontSize:12, color:'#94a3b8' }}>{(page - 1) * limit + i + 1}</span>
           <span style={{ fontFamily:'Bricolage Grotesque,sans-serif', fontWeight:600, fontSize:13, color: p.solved ? '#10b981' : '#f8fafc' }}>
             {p.solved && <span style={{ marginRight:6 }}>✓</span>}{p.title}
           </span>

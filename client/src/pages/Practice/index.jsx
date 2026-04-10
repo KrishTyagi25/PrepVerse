@@ -85,7 +85,7 @@ export default function PracticePage() {
             ? <div style={{ border: '1px solid rgba(255,255,255,.07)', borderRadius: 14, overflow: 'hidden' }}>
               {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
             </div>
-            : <ProblemTable problems={problems} onRowClick={id => navigate(`/practice/${id}`)} />
+            : <ProblemTable problems={problems} page={page} limit={20} onRowClick={id => navigate(`/practice/${id}`)} />
           }
 
           {/* Pagination */}
