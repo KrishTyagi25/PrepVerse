@@ -6,12 +6,12 @@ export function ProblemStatement({ problem }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <h2 style={{ fontFamily: 'Bricolage Grotesque,sans-serif', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-.02em', margin: 0 }}>{problem.title}</h2>
-        <DiffBadge level={problem.diff} />
-        <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: '#475569', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 4, padding: '2px 7px' }}>{problem.tag}</span>
+        <DiffBadge level={problem.difficulty || problem.diff} />
+        <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: '#475569', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 4, padding: '2px 7px' }}>{problem.tags?.[0] || problem.tag}</span>
       </div>
 
       <div style={{ fontFamily: 'Geist,sans-serif', fontSize: 14, color: '#94a3b8', lineHeight: 1.8, marginBottom: 20, whiteSpace: 'pre-line' }}>
-        {problem.desc.split('`').map((part, i) =>
+        {(problem.description || problem.desc || '').split('`').map((part, i) =>
           i % 2 === 1
             ? <code key={i} style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, color: '#00d2ff', background: 'rgba(0,210,255,.08)', padding: '1px 5px', borderRadius: 4 }}>{part}</code>
             : <span key={i}>{part}</span>

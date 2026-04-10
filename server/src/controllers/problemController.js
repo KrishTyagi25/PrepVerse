@@ -91,7 +91,8 @@ const getDailyProblem = asyncHandler(async (req, res) => {
 
 // ── GET /api/problems/:id ─────────────────────────
 const getProblemById = asyncHandler(async (req, res) => {
-  const problem = await Problem.findById(req.params.id).select('-solution.javascript')
+  const query = req.params.id.match(/^[0-9a-fA-F]{24}$/) ? { _id: req.params.id } : { slug: req.params.id }
+  const problem = await Problem.findOne(query).select('-solution.javascript')
 
   if (!problem || !problem.isActive) {
     res.status(404); throw new Error('Problem not found')
@@ -115,7 +116,8 @@ const getProblemById = asyncHandler(async (req, res) => {
 // ── POST /api/problems/:id/submit ────────────────
 const submitSolution = asyncHandler(async (req, res) => {
   const { code, language } = req.body
-  const problem = await Problem.findById(req.params.id)
+  const query = req.params.id.match(/^[0-9a-fA-F]{24}$/) ? { _id: req.params.id } : { slug: req.params.id }
+  const problem = await Problem.findOne(query)
 
   if (!problem) { res.status(404); throw new Error('Problem not found') }
   if (!code)    { res.status(400); throw new Error('Code is required') }
@@ -199,7 +201,8 @@ const submitSolution = asyncHandler(async (req, res) => {
 // Run against sample test cases only (no XP)
 const runCode = asyncHandler(async (req, res) => {
   const { code, language } = req.body
-  const problem = await Problem.findById(req.params.id)
+  const query = req.params.id.match(/^[0-9a-fA-F]{24}$/) ? { _id: req.params.id } : { slug: req.params.id }
+  const problem = await Problem.findOne(query)
 
   if (!problem) { res.status(404); throw new Error('Problem not found') }
 
@@ -222,9 +225,12 @@ const runCode = asyncHandler(async (req, res) => {
 
 // ── GET /api/problems/:id/submissions ────────────
 const getMySubmissions = asyncHandler(async (req, res) => {
+  const query = req.params.id.match(/^[0-9a-fA-F]{24}$/) ? { _id: req.params.id } : { slug: req.params.id }
+  const problem = await Problem.findOne(query)
+  if (!problem) { res.status(404); throw new Error('Problem not found'); }
   const submissions = await Submission.find({
     user:    req.user._id,
-    problem: req.params.id,
+    problem: problem._id,
   })
     .sort({ createdAt: -1 })
     .limit(10)

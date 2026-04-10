@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "../../../components/layout/Navbar";
 import { useCanvasBg } from "../../../hooks/useCanvasBg";
@@ -272,7 +272,7 @@ export default function SolvePage() {
         >
           {problem.title}
         </div>
-        <DiffBadge level={problem.diff} />
+        <DiffBadge level={problem.difficulty || problem.diff} />
         <span
           style={{
             fontFamily: "JetBrains Mono,monospace",
@@ -280,7 +280,7 @@ export default function SolvePage() {
             color: "#475569",
           }}
         >
-          {problem.company}
+          {problem.companies?.[0] || problem.company}
         </span>
 
         <select
