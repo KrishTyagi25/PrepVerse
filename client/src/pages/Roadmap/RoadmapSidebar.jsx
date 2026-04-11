@@ -59,6 +59,11 @@ export function RoadmapSidebar({ roadmap, donePct, weeksLeft, completed, isTopic
           <Button variant="ghost"   size="sm" style={{ width:'100%' }} onClick={() => navigate('/daily')}>🎯 Daily challenge</Button>
           <Button variant="outline" size="sm" style={{ width:'100%' }} onClick={() => navigate('/resume')}>📄 Update resume</Button>
         </div>
+
+        {/* Added auto-save indicator */}
+        <div style={{ marginTop:12, paddingTop:10, borderTop:'1px solid rgba(255,255,255,.06)', fontFamily:'JetBrains Mono,monospace', fontSize:10, color:'#1e293b', textAlign:'center' }}>
+          ✓ Progress auto-saved
+        </div>
       </GlassCard>
     </div>
   )

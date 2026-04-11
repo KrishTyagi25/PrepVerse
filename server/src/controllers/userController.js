@@ -26,7 +26,6 @@ const updateProfile = asyncHandler(async (req, res) => {
 const updateAvatar = asyncHandler(async (req, res) => {
   if (!req.file) { res.status(400); throw new Error('No image uploaded') }
 
-  // Delete old avatar from cloudinary if exists
   const currentUser = await User.findById(req.user._id)
   if (currentUser.avatar) {
     const publicId = currentUser.avatar.split('/').pop().split('.')[0]
@@ -83,7 +82,6 @@ const sendConnectionRequest = asyncHandler(async (req, res) => {
   if (me_doc.connections.includes(targetId))    { res.status(400); throw new Error('Already connected') }
   if (me_doc.pendingSent.includes(targetId))    { res.status(400); throw new Error('Request already sent') }
   if (me_doc.pendingReceived.includes(targetId)){
-    // Auto-accept if they already sent us a request
     me_doc.connections.push(targetId)
     me_doc.pendingReceived = me_doc.pendingReceived.filter(id => id.toString() !== targetId)
     target.connections.push(me)
@@ -146,4 +144,64 @@ const completeOnboarding = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Onboarding complete', data: { user } })
 })
 
-module.exports = { getUserProfile, updateProfile, updateAvatar, searchUsers, sendConnectionRequest, acceptConnection, removeConnection, completeOnboarding }
+
+// ================== NEW FEATURES ==================
+
+// ── GET /api/users/resume ──────────────────────────
+const getResume = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('resume name email')
+  res.json({ success: true, data: { resume: user.resume } })
+})
+
+// ── PUT /api/users/resume ──────────────────────────
+const saveResume = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { resume: req.body },
+    { new: true }
+  ).select('resume')
+  res.json({ success: true, message: 'Resume saved', data: { resume: user.resume } })
+})
+
+// ── GET /api/users/roadmap ─────────────────────────
+const getRoadmap = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('roadmapProgress')
+  res.json({ success: true, data: { roadmap: user.roadmapProgress } })
+})
+
+// ── PUT /api/users/roadmap ─────────────────────────
+const saveRoadmap = asyncHandler(async (req, res) => {
+  const { role, completed, targetDate } = req.body
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { roadmapProgress: { role, completed, targetDate } },
+    { new: true }
+  ).select('roadmapProgress')
+  res.json({ success: true, message: 'Roadmap saved', data: { roadmap: user.roadmapProgress } })
+})
+
+// ── GET /api/users/projects ────────────────────────
+const getProjects = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('projects')
+  res.json({ success: true, data: { projects: user.projects } })
+})
+
+// ── PUT /api/users/projects ────────────────────────
+const saveProjects = asyncHandler(async (req, res) => {
+  const { projects } = req.body
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { projects },
+    { new: true, runValidators: true }
+  ).select('projects')
+  res.json({ success: true, message: 'Projects saved', data: { projects: user.projects } })
+})
+
+
+module.exports = {
+  getUserProfile, updateProfile, updateAvatar, searchUsers,
+  sendConnectionRequest, acceptConnection, removeConnection, completeOnboarding,
+  getResume, saveResume,
+  getRoadmap, saveRoadmap,
+  getProjects, saveProjects
+}

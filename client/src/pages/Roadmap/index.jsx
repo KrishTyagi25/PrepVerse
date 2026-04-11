@@ -1,4 +1,7 @@
 import React, { useState, useMemo } from 'react'
+import { useEffect }     from 'react'
+import { userService } from '../../api/services/userService' 
+import { useAuth }     from '../../context/AuthContext'
 import { Navbar }          from '../../components/layout/Navbar'
 import { useCanvasBg }     from '../../hooks/useCanvasBg'
 import { useCursor }       from '../../hooks/useCursor'
@@ -26,40 +29,47 @@ export const ROADMAPS = {
       { week:12, theme:'Mock Interviews & Review',   color:'#f59e0b', topics:[{title:'3 AI mock interviews',done:false},{title:'System design basics',done:false},{title:'Behavioural prep',done:false},{title:'Resume review',done:false}], problems:[{title:'Review all solved',diff:'Mixed'}], resource:'PrepVerse AI Interview' },
     ],
   },
-  be: {
-    label:'Backend Developer',
-    weeks:[
-      { week:1,  theme:'Programming Fundamentals',  color:'#10b981', topics:[{title:'Python / Java / Node basics',done:true},{title:'OOP principles',done:true},{title:'Data types & collections',done:false},{title:'Error handling',done:false}], problems:[{title:'Two Sum',diff:'Easy'},{title:'Reverse Linked List',diff:'Easy'}], resource:'Python Docs / Node Docs' },
-      { week:2,  theme:'Arrays & Strings',          color:'#7c3aed', topics:[{title:'Array manipulation',done:false},{title:'String algorithms',done:false},{title:'Sorting algorithms',done:false},{title:'Binary search',done:false}], problems:[{title:'Best Time to Buy',diff:'Easy'},{title:'Find Min in Rotated',diff:'Medium'}], resource:'NeetCode.io' },
-      { week:3,  theme:'REST API Design',           color:'#10b981', topics:[{title:'HTTP methods & status codes',done:false},{title:'RESTful principles',done:false},{title:'Authentication (JWT, OAuth)',done:false},{title:'Rate limiting',done:false}], problems:[{title:'Valid Parentheses',diff:'Easy'},{title:'Min Stack',diff:'Medium'}], resource:'REST API Tutorial' },
-      { week:4,  theme:'Databases',                 color:'#10b981', topics:[{title:'SQL fundamentals',done:false},{title:'Joins & Indexing',done:false},{title:'NoSQL basics',done:false},{title:'Database design',done:false}], problems:[{title:'Climbing Stairs',diff:'Easy'},{title:'Coin Change',diff:'Medium'}], resource:'PostgreSQL Tutorial' },
-      { week:5,  theme:'Trees & Linked Lists',      color:'#7c3aed', topics:[{title:'Linked List patterns',done:false},{title:'Binary Trees',done:false},{title:'BST operations',done:false},{title:'Tree traversals',done:false}], problems:[{title:'Merge Two Lists',diff:'Easy'},{title:'Reorder List',diff:'Medium'}], resource:'NeetCode' },
-      { week:6,  theme:'Caching & Queues',          color:'#10b981', topics:[{title:'Redis fundamentals',done:false},{title:'Cache patterns',done:false},{title:'Message queues',done:false},{title:'Pub/Sub pattern',done:false}], problems:[{title:'LRU Cache',diff:'Medium'},{title:'Design Hit Counter',diff:'Medium'}], resource:'Redis Docs' },
-      { week:7,  theme:'Graphs',                    color:'#7c3aed', topics:[{title:'Graph representations',done:false},{title:'BFS & DFS',done:false},{title:'Shortest path',done:false},{title:'Topological sort',done:false}], problems:[{title:'Number of Islands',diff:'Medium'},{title:'Course Schedule',diff:'Medium'}], resource:'NeetCode' },
-      { week:8,  theme:'System Design Basics',      color:'#f59e0b', topics:[{title:'Scalability concepts',done:false},{title:'Load balancing',done:false},{title:'CAP theorem',done:false},{title:'Design a URL shortener',done:false}], problems:[{title:'Merge Intervals',diff:'Medium'},{title:'Meeting Rooms',diff:'Medium'}], resource:'System Design Primer' },
-      { week:9,  theme:'Dynamic Programming',       color:'#7c3aed', topics:[{title:'DP patterns',done:false},{title:'Knapsack problems',done:false},{title:'Sequence DP',done:false},{title:'Matrix DP',done:false}], problems:[{title:'House Robber',diff:'Medium'},{title:'Longest Common Sub',diff:'Medium'}], resource:'NeetCode DP' },
-      { week:10, theme:'Docker & Deployment',       color:'#10b981', topics:[{title:'Docker basics',done:false},{title:'Docker Compose',done:false},{title:'CI/CD pipelines',done:false},{title:'Cloud basics (AWS/GCP)',done:false}], problems:[{title:'Trapping Rain Water',diff:'Hard'},{title:'Median Data Streams',diff:'Hard'}], resource:'Docker Docs' },
-      { week:11, theme:'Security & Monitoring',     color:'#10b981', topics:[{title:'OWASP top 10',done:false},{title:'HTTPS & TLS',done:false},{title:'Logging best practices',done:false},{title:'API versioning',done:false}], problems:[{title:'Word Search II',diff:'Hard'},{title:'Alien Dictionary',diff:'Hard'}], resource:'OWASP' },
-      { week:12, theme:'Mock Interviews & Review',  color:'#f59e0b', topics:[{title:'3 AI mock interviews',done:false},{title:'System design mock',done:false},{title:'Behavioural prep',done:false},{title:'Resume review',done:false}], problems:[{title:'Review all solved',diff:'Mixed'}], resource:'PrepVerse AI Interview' },
-    ],
-  },
+  be: { label:'Backend Developer', weeks:[] },
 }
 ROADMAPS.fs = { label:'Fullstack Developer', weeks: ROADMAPS.fe.weeks }
-ROADMAPS.ml = { label:'ML / AI Engineer',    weeks: ROADMAPS.be.weeks.map(w => ({ ...w, theme: w.theme.replace('REST API Design','ML Fundamentals').replace('Docker & Deployment','MLOps & Deployment').replace('Caching & Queues','Model Training') })) }
+ROADMAPS.ml = { label:'ML / AI Engineer', weeks: ROADMAPS.fe.weeks }
 
 export default function RoadmapPage() {
   useCanvasBg('roadmap-canvas')
   useCursor()
   const toast = useToast()
 
-  const [role,       setRole]       = useState('fe')
+  const { user } = useAuth()
+
+  const [role, setRole] = useState('fe')
   const [targetDate, setTargetDate] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() + 84); return d.toISOString().split('T')[0]
   })
-  const [completed, setCompleted]   = useState({})
-  const [expanded,  setExpanded]    = useState({ 1:true })
+  const [completed, setCompleted] = useState({})
+  const [expanded, setExpanded] = useState({ 1:true })
 
   const roadmap = ROADMAPS[role]
+
+  useEffect(() => {
+    if (!user) return
+    userService.getRoadmap()
+      .then(({ data }) => {
+        const saved = data.data.roadmap
+        if (!saved) return
+        if (saved.role) setRole(saved.role)
+        if (saved.completed) setCompleted(saved.completed)
+        if (saved.targetDate) setTargetDate(new Date(saved.targetDate).toISOString().split('T')[0])
+      })
+      .catch(() => {})
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    const timer = setTimeout(() => {
+      userService.saveRoadmap({ role, completed, targetDate }).catch(() => {})
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [role, completed, targetDate])
 
   const toggleTopic = (week, topicIdx) => {
     const key = `${week}-${topicIdx}`
@@ -71,23 +81,14 @@ export default function RoadmapPage() {
     return key in completed ? completed[key] : defaultDone
   }
 
-  const allTopics = roadmap.weeks.flatMap(w => w.topics)
-  const donePct   = useMemo(() => {
-    const done = roadmap.weeks.reduce((acc, w) =>
-      acc + w.topics.filter((t,i) => isTopicDone(w.week, i, t.done)).length, 0)
-    return Math.round((done / allTopics.length) * 100)
-  }, [completed, role])
-
-  const weeksLeft = useMemo(() => {
-    const diff = new Date(targetDate) - new Date()
-    return Math.max(0, Math.ceil(diff / (7 * 24 * 60 * 60 * 1000)))
-  }, [targetDate])
-
   const handleComplete = (week, topicIdx) => {
+    const key = `${week}-${topicIdx}`
+    const nowDone = !(key in completed ? completed[key] : false)
     toggleTopic(week, topicIdx)
-    toast('Topic marked complete! Keep going 🔥', 'success', 2000)
+    if (nowDone) toast('Topic completed! 🔥', 'success', 1500)
   }
 
+ 
   return (
     <div style={{ minHeight:'100vh', background:'#080909', color:'#f8fafc', fontFamily:'Geist,sans-serif' }}>
       <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>

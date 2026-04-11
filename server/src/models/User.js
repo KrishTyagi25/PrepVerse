@@ -42,6 +42,43 @@ const userSchema = new mongoose.Schema(
     linkedin: { type: String, default: "" },
     portfolio: { type: String, default: "" },
 
+    // Add inside userSchema definition, after the social links section:
+
+// Resume data
+resume: {
+  name:       { type: String, default: '' },
+  title:      { type: String, default: '' },
+  email:      { type: String, default: '' },
+  phone:      { type: String, default: '' },
+  location:   { type: String, default: '' },
+  linkedin:   { type: String, default: '' },
+  github:     { type: String, default: '' },
+  portfolio:  { type: String, default: '' },
+  summary:    { type: String, default: '' },
+  experience: { type: mongoose.Schema.Types.Mixed, default: [] },
+  education:  { type: mongoose.Schema.Types.Mixed, default: [] },
+  projects:   { type: mongoose.Schema.Types.Mixed, default: [] },
+  skills:     { type: mongoose.Schema.Types.Mixed, default: {} },
+  achievements:{ type: [String], default: [] },
+},
+
+// Roadmap progress
+roadmapProgress: {
+  role:      { type: String, default: 'fe' },
+  completed: { type: mongoose.Schema.Types.Mixed, default: {} }, // { "1-0": true, "1-1": true }
+  targetDate:{ type: Date, default: null },
+},
+
+// Projects for profile page
+projects: [{
+  name:        { type: String, required: true },
+  description: { type: String, default: '' },
+  stack:       { type: String, default: '' },
+  github:      { type: String, default: '' },
+  live:        { type: String, default: '' },
+  stars:       { type: Number, default: 0 },
+}],
+
     // ── Prep stats ───────────────────────────────
     xp: { type: Number, default: 0 },
     streak: { type: Number, default: 0 },

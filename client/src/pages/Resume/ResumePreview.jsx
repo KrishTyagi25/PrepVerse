@@ -13,7 +13,10 @@ export function ResumePreview({ resume: r, template = 'classic', large = false }
   return (
     <div style={{ borderRadius:12, overflow:'hidden', border:'1px solid rgba(255,255,255,.08)', boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
       {/* Scale wrapper */}
-      <div style={{ transformOrigin:'top left', transform:`scale(${scale})`, width:`${100/scale}%`, height:large ? 'auto' : `${860 * scale}px`, overflow: large ? 'visible' : 'hidden', background:'#fff', color:'#111', fontFamily:'Georgia, serif' }}>
+      <div
+        id="resume-preview-content"
+        style={{ transformOrigin:'top left', transform:`scale(${scale})`, width:`${100/scale}%`, height:large ? 'auto' : `${860 * scale}px`, overflow: large ? 'visible' : 'hidden', background:'#fff', color:'#111', fontFamily:'Georgia, serif' }}
+      >
 
         {/* Header */}
         <div style={{ background:t.headerBg, color:t.headerText, padding:'28px 32px 24px' }}>
