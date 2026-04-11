@@ -21,8 +21,12 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // ✅ Added states
+  const [projects, setProjects] = useState([])
+  const [editingProjects, setEditingProjects] = useState(false)
+  const [projectsSaving, setProjectsSaving] = useState(false)
+
   useEffect(() => {
-    // If no username in URL, show logged-in user's profile
     const id = username ?? me?._id
     if (!id) return
     userService.getProfile(id)
@@ -30,6 +34,37 @@ export default function ProfilePage() {
       .catch(() => toast('Profile not found', 'error'))
       .finally(() => setLoading(false))
   }, [username, me?._id])
+
+  // ✅ Load projects
+  useEffect(() => {
+    if (!profile) return
+    const isOwnProfile = profile._id === me?._id
+    if (isOwnProfile) {
+      userService.getProjects()
+        .then(({ data }) => setProjects(data.data.projects ?? []))
+        .catch(() => {})
+    } else {
+      setProjects(profile.projects ?? [])
+    }
+  }, [profile])
+
+  // ✅ Save handler
+  const saveProjects = async () => {
+    setProjectsSaving(true)
+    try {
+      await userService.saveProjects({ projects })
+      toast('Projects saved ✓', 'success')
+      setEditingProjects(false)
+    } catch {
+      toast('Failed to save projects', 'error')
+    } finally {
+      setProjectsSaving(false)
+    }
+  }
+
+  const addProject = () => setProjects(p => [...p, { name:'', description:'', stack:'', github:'', live:'' }])
+  const updateProject = (i, field, val) => setProjects(p => p.map((x,idx) => idx===i ? { ...x, [field]:val } : x))
+  const removeProject = (i) => setProjects(p => p.filter((_,idx) => idx!==i))
 
   if (loading) return <div style={{ minHeight: '100vh', background: '#080909' }} />
   if (!profile) return (
@@ -58,7 +93,16 @@ export default function ProfilePage() {
           <ProfileHeader profile={profile} />
           <StatsGrid profile={profile} />
           <BadgeShelf />
-          <ProjectsSection />
+          <ProjectsSection 
+            projects={projects}
+            editing={editingProjects}
+            setEditing={setEditingProjects}
+            onAdd={addProject}
+            onUpdate={updateProject}
+            onRemove={removeProject}
+            onSave={saveProjects}
+            saving={projectsSaving}
+          />
           <SolveHeatmap />
         </main>
       </div>

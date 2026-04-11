@@ -22,6 +22,7 @@ const feedRoutes         = require('./src/routes/feed')
 const messageRoutes      = require('./src/routes/messages')
 const notificationRoutes = require('./src/routes/notifications')
 const leaderboardRoutes  = require('./src/routes/leaderboard')
+const interviewRoutes = require('./src/routes/interview')
 
 // Connect DB
 connectDB()
@@ -69,6 +70,8 @@ app.use('/api/feed',          feedRoutes)
 app.use('/api/messages',      messageRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/leaderboard',   leaderboardRoutes)
+app.use('/api/interview', interviewRoutes)
+
 
 // Health check
 app.get('/api/health', (req, res) =>

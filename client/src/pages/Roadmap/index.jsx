@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useEffect }     from 'react'
-import { userService } from '../../api/services/userService' 
+import { userService } from '../../api/userService'
 import { useAuth }     from '../../context/AuthContext'
 import { Navbar }          from '../../components/layout/Navbar'
 import { useCanvasBg }     from '../../hooks/useCanvasBg'

@@ -42,62 +42,70 @@ const userSchema = new mongoose.Schema(
     linkedin: { type: String, default: "" },
     portfolio: { type: String, default: "" },
 
-    // Add inside userSchema definition, after the social links section:
+    // ── Resume data ──────────────────────────────
+    resume: {
+      name:       { type: String, default: '' },
+      title:      { type: String, default: '' },
+      email:      { type: String, default: '' },
+      phone:      { type: String, default: '' },
+      location:   { type: String, default: '' },
+      linkedin:   { type: String, default: '' },
+      github:     { type: String, default: '' },
+      portfolio:  { type: String, default: '' },
+      summary:    { type: String, default: '' },
+      experience: { type: mongoose.Schema.Types.Mixed, default: [] },
+      education:  { type: mongoose.Schema.Types.Mixed, default: [] },
+      projects:   { type: mongoose.Schema.Types.Mixed, default: [] },
+      skills:     { type: mongoose.Schema.Types.Mixed, default: {} },
+      achievements:{ type: [String], default: [] },
+    },
 
-// Resume data
-resume: {
-  name:       { type: String, default: '' },
-  title:      { type: String, default: '' },
-  email:      { type: String, default: '' },
-  phone:      { type: String, default: '' },
-  location:   { type: String, default: '' },
-  linkedin:   { type: String, default: '' },
-  github:     { type: String, default: '' },
-  portfolio:  { type: String, default: '' },
-  summary:    { type: String, default: '' },
-  experience: { type: mongoose.Schema.Types.Mixed, default: [] },
-  education:  { type: mongoose.Schema.Types.Mixed, default: [] },
-  projects:   { type: mongoose.Schema.Types.Mixed, default: [] },
-  skills:     { type: mongoose.Schema.Types.Mixed, default: {} },
-  achievements:{ type: [String], default: [] },
-},
+    // ── Roadmap progress ─────────────────────────
+    roadmapProgress: {
+      role:      { type: String, default: 'fe' },
+      completed: { type: mongoose.Schema.Types.Mixed, default: {} },
+      targetDate:{ type: Date, default: null },
+    },
 
-// Roadmap progress
-roadmapProgress: {
-  role:      { type: String, default: 'fe' },
-  completed: { type: mongoose.Schema.Types.Mixed, default: {} }, // { "1-0": true, "1-1": true }
-  targetDate:{ type: Date, default: null },
-},
+    // ── Projects ────────────────────────────────
+    projects: [{
+      name:        { type: String, required: true },
+      description: { type: String, default: '' },
+      stack:       { type: String, default: '' },
+      github:      { type: String, default: '' },
+      live:        { type: String, default: '' },
+      stars:       { type: Number, default: 0 },
+    }],
 
-// Projects for profile page
-projects: [{
-  name:        { type: String, required: true },
-  description: { type: String, default: '' },
-  stack:       { type: String, default: '' },
-  github:      { type: String, default: '' },
-  live:        { type: String, default: '' },
-  stars:       { type: Number, default: 0 },
-}],
+    // ── 🔔 Notification Preferences (NEW) ───────
+    notificationPrefs: {
+      emailOnLike:       { type: Boolean, default: true },
+      emailOnComment:    { type: Boolean, default: true },
+      emailOnConnection: { type: Boolean, default: true },
+      pushOnMessage:     { type: Boolean, default: true },
+      dailyReminder:     { type: Boolean, default: true },
+      weeklyDigest:      { type: Boolean, default: false },
+    },
 
     // ── Prep stats ───────────────────────────────
     xp: { type: Number, default: 0 },
     streak: { type: Number, default: 0 },
     lastSolvedAt: { type: Date, default: null },
-    score: { type: Number, default: 0 }, // interview avg score
-    solved: { type: Number, default: 0 }, // total problems solved
+    score: { type: Number, default: 0 },
+    solved: { type: Number, default: 0 },
 
-    // ── Connections (social graph) ───────────────
+    // ── Connections ──────────────────────────────
     connections: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     pendingSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     pendingReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
-    // ── Account ──────────────────────────────────
+    // ── Account ─────────────────────────────────
     isVerified: { type: Boolean, default: false },
     onboardingDone: { type: Boolean, default: false },
     isRecruiter: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
 
-    // ── Tokens ───────────────────────────────────
+    // ── Tokens ──────────────────────────────────
     refreshToken: { type: String, select: false },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpire: { type: Date, select: false },
@@ -105,35 +113,35 @@ projects: [{
   { timestamps: true },
 );
 
-// ── Indexes ──────────────────────────────────────
+// ── Indexes ─────────────────────────────────────
 userSchema.index({ name: "text", college: "text" });
 userSchema.index({ xp: -1 });
 userSchema.index({ streak: -1 });
 
-// ── Hash password before save ────────────────────
+// ── Hash password ───────────────────────────────
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// ── Compare password ─────────────────────────────
+// ── Compare password ────────────────────────────
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-// ── Generate password reset token ────────────────
+// ── Reset token ─────────────────────────────────
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
   this.resetPasswordToken = crypto
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
 
-// ── Update streak ─────────────────────────────────
+// ── Streak logic ────────────────────────────────
 userSchema.methods.updateStreak = function () {
   const now = new Date();
   const last = this.lastSolvedAt;
@@ -148,15 +156,14 @@ userSchema.methods.updateStreak = function () {
   const diffMs = now - last;
   const diffDays = Math.floor(diffMs / oneDayMs);
 
-  if (diffDays === 0) return; // already solved today
-  if (diffDays === 1)
-    this.streak += 1; // consecutive day
-  else this.streak = 1; // streak broken
+  if (diffDays === 0) return;
+  if (diffDays === 1) this.streak += 1;
+  else this.streak = 1;
 
   this.lastSolvedAt = now;
 };
 
-// ── Public profile (no sensitive fields) ─────────
+// ── Public profile ──────────────────────────────
 userSchema.methods.toPublicProfile = function () {
   return {
     _id: this._id,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar } from "../../components/layout/Navbar";
 import { useCanvasBg } from "../../hooks/useCanvasBg";
 import { useCursor } from "../../hooks/useCursor";
@@ -9,6 +9,7 @@ import { NotifItem } from "./NotifItem";
 import { notificationService } from "../../api/notificationService";
 import { SkeletonRow } from "../../components/ui/Skeleton";
 import { useSocketContext } from "../../context/SocketContext";
+import { useToast } from "../../components/ui/Toast";
 
 const TABS = [
   { id: "all", label: "All" },
@@ -33,7 +34,11 @@ export default function NotificationsPage() {
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unread, setUnread] = useState(0);
+  const [tab, setTab] = useState('all');
+  const toast = useToast();
   const { on, off } = useSocketContext();
+
+  const filtered = tab === 'all' ? notifs : notifs.filter(n => CATEGORY[n.type] === tab);
 
   useEffect(() => {
     const handler = (notif) => {

@@ -25,4 +25,6 @@ export const userService = {
   saveRoadmap: (data) => api.put("/users/roadmap", data),
   getProjects: () => api.get("/users/projects"),
   saveProjects: (data) => api.put("/users/projects", data),
+  getNotifPrefs: () => api.get('/users/notification-prefs'),
+  saveNotifPrefs: (data) => api.put('/users/notification-prefs', data),
 };

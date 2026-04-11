@@ -1,23 +1,50 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { GlassCard } from '../../components/ui/Atoms'
 import { Button }    from '../../components/ui/Button'
 import { SectionHeader } from './SectionHeader'
-
+import { userService } from '../../api/userService'
+import { useToast } from '../../components/ui/Toast'
 
 const NOTIFS = [
-  { id:'streak',    label:'Streak reminders',       desc:'Daily nudge to keep your streak alive',    default:true  },
-  { id:'interview', label:'Interview invites',       desc:'When a recruiter books you for a session', default:true  },
-  { id:'leaderboard',label:'Leaderboard updates',   desc:'When your rank changes significantly',     default:false },
-  { id:'newproblem',label:'New problems',            desc:'When new company-tagged problems are added',default:false },
-  { id:'digest',    label:'Weekly digest',           desc:'Your weekly progress summary email',       default:true  },
+  { id:'emailOnLike',    label:'Email on Like',       desc:'When someone likes your post',    default:true  },
+  { id:'emailOnComment', label:'Email on Comment',       desc:'When someone comments on your post', default:true  },
+  { id:'emailOnConnection',label:'Email on Connection',   desc:'When you receive a connection request',     default:true },
+  { id:'pushOnMessage',  label:'Push on Message',      desc:'When you receive a new message',default:true },
+  { id:'dailyReminder',  label:'Daily Reminder',       desc:'Daily nudge to keep your streak alive',       default:true  },
+  { id:'weeklyDigest',   label:'Weekly digest',        desc:'Your weekly progress summary email',       default:false  },
 ]
 
 export function NotificationsSection() {
-  const [prefs, setPrefs] = useState(Object.fromEntries(NOTIFS.map(n => [n.id, n.default])))
-  const [saved, setSaved] = useState(false)
+  const [prefs, setPrefs] = useState({
+    emailOnLike: true, emailOnComment: true, emailOnConnection: true,
+    pushOnMessage: true, dailyReminder: true, weeklyDigest: false,
+  })
+  const [saving, setSaving] = useState(false)
+  const toast = useToast()
 
-  const toggle = id => setPrefs(p => ({ ...p, [id]: !p[id] }))
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000) }
+  useEffect(() => {
+    userService.getNotifPrefs()
+      .then(({ data }) => {
+        if (data?.data?.prefs) {
+          setPrefs(data.data.prefs)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }))
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      await userService.saveNotifPrefs(prefs)
+      toast('Preferences saved ✓', 'success')
+    } catch {
+      toast('Failed to save', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div>
@@ -39,7 +66,9 @@ export function NotificationsSection() {
         </div>
       </GlassCard>
       <div style={{ display:'flex', justifyContent:'flex-end' }}>
-        <Button variant="primary" size="md" onClick={handleSave}>{saved ? '✓ Saved!' : 'Save preferences'}</Button>
+        <Button variant="primary" size="md" onClick={save} disabled={saving}>
+          {saving ? 'Saving...' : 'Save preferences'}
+        </Button>
       </div>
     </div>
   )
