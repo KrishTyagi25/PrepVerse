@@ -22,7 +22,7 @@ const feedRoutes         = require('./src/routes/feed')
 const messageRoutes      = require('./src/routes/messages')
 const notificationRoutes = require('./src/routes/notifications')
 const leaderboardRoutes  = require('./src/routes/leaderboard')
-const interviewRoutes = require('./src/routes/interview')
+const interviewRoutes    = require('./src/routes/interview')
 
 // Connect DB
 connectDB()
@@ -30,10 +30,18 @@ connectDB()
 const app    = express()
 const server = http.createServer(app)
 
+// ── Allowed Origins ────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://prepverse-gntaq1bot-krishtyagi25s-projects.vercel.app',
+  process.env.CLIENT_URL,
+].filter(Boolean)
+
 // ── Socket.io ─────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin:      process.env.CLIENT_URL || 'http://localhost:5173',
+    origin:      allowedOrigins,
     credentials: true,
   },
 })
@@ -45,9 +53,17 @@ app.set('io', io)
 // ── Global middleware ──────────────────────────────
 app.use(helmet())
 app.use(cors({
-  origin:      process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`))
+    }
+  },
   credentials: true,
-  methods:     ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }))
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 app.use(express.json({ limit: '10mb' }))
@@ -62,7 +78,6 @@ app.use(rateLimit({
 }))
 
 // ── Routes ─────────────────────────────────────────
-
 app.use('/api/auth',          authRoutes)
 app.use('/api/users',         userRoutes)
 app.use('/api/problems',      problemRoutes)
@@ -70,8 +85,7 @@ app.use('/api/feed',          feedRoutes)
 app.use('/api/messages',      messageRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/leaderboard',   leaderboardRoutes)
-app.use('/api/interview', interviewRoutes)
-
+app.use('/api/interview',     interviewRoutes)
 
 // Health check
 app.get('/api/health', (req, res) =>
@@ -92,7 +106,7 @@ const PORT = process.env.PORT || 5000
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
   console.log(`📡 Socket.io ready`)
-  console.log(`🌐 Client URL: ${process.env.CLIENT_URL}`)
+  console.log(`🌐 Allowed origins: ${allowedOrigins.join(', ')}`)
 })
 
 // Handle unhandled promise rejections
