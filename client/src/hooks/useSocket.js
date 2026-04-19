@@ -15,7 +15,7 @@ export function useSocket() {
       return socketInstance
     }
 
-    socketInstance = io('http://localhost:5000', {
+    socketInstance = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000', {
       auth:            { token },
       withCredentials: true,
       transports:      ['websocket', 'polling'],

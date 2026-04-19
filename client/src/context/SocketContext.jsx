@@ -25,7 +25,7 @@ export function SocketProvider({ children }) {
     if (!token) return
 
     // Connect
-    const socket = io('http://localhost:5000', {
+    const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000', {
       auth:            { token },
       withCredentials: true,
       transports:      ['websocket', 'polling'],
